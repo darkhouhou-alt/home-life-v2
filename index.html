@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Home Life v2</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --card: #ffffff;
+      --primary: #4a6b53;
+      --primary-hover: #3b5642;
+      --text: #2c2c2c;
+      --muted: #7a7a7a;
+      --border: #e5e2dc;
+      --danger: #d9534f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--border);
+    }
+    header h1 {
+      font-size: 1.5rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e8efe9;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .badge.error {
+      background: #fdecea;
+      color: var(--danger);
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: 0.15s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: #f0eee9; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-family: inherit;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    ul.list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    ul.list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: #faf9f6;
+      border-radius: 8px;
+      border: 1px solid #efede8;
+      font-size: 0.92rem;
+    }
+    ul.list li.done span {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      flex: 1;
+    }
+    .del-btn {
+      background: transparent;
+      color: #aaa;
+      padding: 2px 6px;
+      font-size: 0.85rem;
+    }
+    .del-btn:hover { color: var(--danger); }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    .footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🏡 Our Home Life</h1>
+      <div class="status-bar">
+        <span id="syncStatus" class="badge">불러오는 중...</span>
+        <button class="btn-outline" onclick="loadState()">새로고침</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- 오늘의 할 일 -->
+      <div class="card">
+        <h2>✅ 오늘의 할 일 & 루틴</h2>
+        <div class="input-row">
+          <input type="text" id="todoInput" placeholder="할 일을 입력하세요..." onkeypress="if(event.key==='Enter') addItem('todos', 'todoInput')" />
+          <button class="btn-primary" onclick="addItem('todos', 'todoInput')">추가</button>
+        </div>
+        <ul id="todoList" class="list"></ul>
+      </div>
+
+      <!-- 장보기 & 살림 메모 -->
+      <div class="card">
+        <h2>🛒 장보기 & 필요 물품</h2>
+        <div class="input-row">
+          <input type="text" id="shopInput" placeholder="살 것 / 채워둘 것..." onkeypress="if(event.key==='Enter') addItem('shopping', 'shopInput')" />
+          <button class="btn-primary" onclick="addItem('shopping', 'shopInput')">추가</button>
+        </div>
+        <ul id="shopList" class="list"></ul>
+      </div>
+    </div>
+
+    <!-- 공유 메모장 -->
+    <div class="card">
+      <h2>📝 우리 집 공유 노트 & 일정 기록</h2>
+      <textarea id="sharedNote" placeholder="자유롭게 기록하고 저장 버튼을 누르세요..."></textarea>
+      <div class="footer-actions">
+        <button class="btn-primary" onclick="saveState()">💾 변경사항 저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentVersion = 0;
+    let docData = {
+      todos: [],
+      shopping: [],
+      note: ''
+    };
+
+    const statusEl = document.getElementById('syncStatus');
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.className = isError ? 'badge error' : 'badge';
+    }
+
+    async function loadState() {
+      setStatus('동기화 중...');
+      try {
+        const res = await fetch('/api/state', { cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '불러오기 실패');
+
+        currentVersion = data.version || 0;
+        if (data.document) {
+          docData = {
+            todos: Array.isArray(data.document.todos) ? data.document.todos : [],
+            shopping: Array.isArray(data.document.shopping) ? data.document.shopping : [],
+            note: data.document.note || ''
+          };
+        }
+        render();
+        setStatus(`연결됨 (v${currentVersion})`);
+      } catch (err) {
+        console.error(err);
+        setStatus('연결 오류 (환경변수 확인)', true);
+      }
+    }
+
+    async function saveState() {
+      docData.note = document.getElementById('sharedNote').value;
+      setStatus('저장 중...');
+      try {
+        const res = await fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            version: currentVersion,
+            document: docData
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '저장 실패');
+
+        if (data.version !== undefined) currentVersion = data.version;
+        else currentVersion += 1;
+
+        setStatus(`저장 완료 (v${currentVersion})`);
+      } catch (err) {
+        console.error(err);
+        setStatus('저장 실패', true);
+        alert('저장 중 오류가 발생했습니다: ' + err.message);
+      }
+    }
+
+    function addItem(key, inputId) {
+      const input = document.getElementById(inputId);
+      const text = input.value.trim();
+      if (!text) return;
+      docData[key].push({ id: Date.now(), text, done: false });
+      input.value = '';
+      render();
+      saveState();
+    }
+
+    function toggleItem(key, id) {
+      docData[key] = docData[key].map(item =>
+        item.id === id ? { ...item, done: !item.done } : item
+      );
+      render();
+      saveState();
+    }
+
+    function removeItem(key, id) {
+      docData[key] = docData[key].filter(item => item.id !== id);
+      render();
+      saveState();
+    }
+
+    function renderList(key, elementId) {
+      const ul = document.getElementById(elementId);
+      ul.innerHTML = '';
+      docData[key].forEach(item => {
+        const li = document.createElement('li');
+        if (item.done) li.className = 'done';
+
+        const left = document.createElement('div');
+        left.className = 'item-left';
+        left.onclick = () => toggleItem(key, item.id);
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.checked = item.done;
+
+        const span = document.createElement('span');
+        span.textContent = item.text;
+
+        left.appendChild(chk);
+        left.appendChild(span);
+
+        const del = document.createElement('button');
+        del.className = 'del-btn';
+        del.textContent = '✕';
+        del.onclick = () => removeItem(key, item.id);
+
+        li.appendChild(left);
+        li.appendChild(del);
+        ul.appendChild(li);
+      });
+    }
+
+    function render() {
+      renderList('todos', 'todoList');
+      renderList('shopping', 'shopList');
+      document.getElementById('sharedNote').value = docData.note || '';
+    }
+
+    // 페이지 열릴 때 자동 불러오기
+    loadState();
+  </script>
+</body>
+</html>
